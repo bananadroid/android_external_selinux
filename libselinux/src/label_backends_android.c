@@ -278,6 +278,12 @@ static void closef(struct selabel_handle *rec)
 	struct spec *spec;
 	unsigned int i;
 
+	if (!data)
+		return;
+
+	/* make sure successive ->func_close() calls are harmless */
+	rec->data = NULL;
+
 	if (data->spec_arr) {
 		for (i = 0; i < data->nspec; i++) {
 			spec = &data->spec_arr[i];
@@ -327,7 +333,7 @@ finish:
 	return ret;
 }
 
-static struct selabel_lookup_rec *service_lookup(struct selabel_handle *rec,
+static struct selabel_lookup_rec *lookup_exact_match(struct selabel_handle *rec,
 		const char *key, int __attribute__((unused)) type)
 {
 	struct saved_data *data = (struct saved_data *)rec->data;
@@ -382,7 +388,7 @@ int selabel_property_init(struct selabel_handle *rec,
 	return init(rec, opts, nopts);
 }
 
-int selabel_service_init(struct selabel_handle *rec,
+int selabel_exact_match_init(struct selabel_handle *rec,
 		const struct selinux_opt *opts, unsigned nopts)
 {
 	struct saved_data *data;
@@ -394,7 +400,7 @@ int selabel_service_init(struct selabel_handle *rec,
 	rec->data = data;
 	rec->func_close = &closef;
 	rec->func_stats = &stats;
-	rec->func_lookup = &service_lookup;
+	rec->func_lookup = &lookup_exact_match;
 
 	return init(rec, opts, nopts);
 }
